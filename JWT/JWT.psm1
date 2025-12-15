@@ -1,4 +1,4 @@
-﻿function ConvertFrom-Base64UrlString {
+function ConvertFrom-Base64UrlString {
 <#
 .SYNOPSIS
 Base64url decoder.
@@ -24,7 +24,7 @@ PS Variable:> 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9' | ConvertFrom-Base64UrlStri
 {"alg":"RS256","typ":"JWT"}
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -73,7 +73,7 @@ PS Variable:> '{"alg":"RS256","typ":"JWT"}' | ConvertTo-Base64UrlString
 eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -117,7 +117,7 @@ PS Variable:> Get-JwtHeader 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJqb2U
 {"alg":"none","typ":"JWT"}
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -159,7 +159,7 @@ VERBOSE: Processing JWT: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbjEiOiJ2YW
 {"token1":"value1","token2":"value2"}
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -192,7 +192,7 @@ Specifies the claim to sign in JSON. Mandatory string.
 Specifies a JWT header. Optional. Defaults to '{"alg":"RS256","typ":"JWT"}'.
 
 .PARAMETER Cert
-Specifies the signing certificate of type System.Security.Cryptography.X509Certificates.X509Certificate2. Must be specified and contain the private key if the algorithm in the header is RS256.
+Specifies the signing certificate of type System.Security.Cryptography.X509Certificates.X509Certificate2. Must be specified and contain the private key if the algorithm in the header is RS256/ES256/ES256.
 
 .PARAMETER Secret
 Specifies the HMAC secret. Can be byte array, or a string, which will be converted to bytes. Must be specified if the algorithm in the header is HS256.
@@ -235,7 +235,7 @@ $splat = @{
 Invoke-WebRequest @splat
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -272,15 +272,31 @@ https://jwt.io/
                 throw "RS256 requires -Cert parameter of type System.Security.Cryptography.X509Certificates.X509Certificate2"
             }
             Write-Verbose "Signing certificate: $($Cert.Subject)"
-            $rsa = $Cert.PrivateKey
-            if ($null -eq $rsa) { # Requiring the private key to be present; else cannot sign!
+            if (!$Cert.HasPrivateKey) { # Requiring the private key to be present; else cannot sign!
                 throw "There's no private key in the supplied certificate - cannot sign" 
             }
             else {
+                $privKey =  [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($Cert)
                 # Overloads tested with RSACryptoServiceProvider, RSACng, RSAOpenSsl
-                try { $sig = ConvertTo-Base64UrlString $rsa.SignData($toSign,[Security.Cryptography.HashAlgorithmName]::SHA256,[Security.Cryptography.RSASignaturePadding]::Pkcs1) }
-                catch { throw New-Object System.Exception -ArgumentList ("Signing with SHA256 and Pkcs1 padding failed using private key $($rsa): $_", $_.Exception) }
+                try { $sig = ConvertTo-Base64UrlString $privKey.SignData($toSign,[Security.Cryptography.HashAlgorithmName]::SHA256,[Security.Cryptography.RSASignaturePadding]::Pkcs1) }
+                catch { throw New-Object System.Exception -ArgumentList ("Signing with SHA256 and Pkcs1 padding failed using private key $($privKey): $_", $_.Exception) }
             }
+        }
+        "ES256" {
+            if (-not $PSBoundParameters.ContainsKey("Cert")) {
+                throw "ES256 requires -Cert parameter of type System.Security.Cryptography.X509Certificates.X509Certificate2"
+            }
+            Write-Verbose "Signing certificate: $($Cert.Subject)"
+            if (!$Cert.HasPrivateKey) { # Requiring the private key to be present; else cannot sign!
+                throw "There's no private key in the supplied certificate - cannot sign" 
+            }
+            else {
+                $privKey = [System.Security.Cryptography.X509Certificates.ECDsaCertificateExtensions]::GetECDsaPrivateKey($Cert)
+                # Overloads tested with RSACryptoServiceProvider, RSACng, RSAOpenSsl
+                try { $sig = ConvertTo-Base64UrlString $privKey.SignData($toSign,[Security.Cryptography.HashAlgorithmName]::SHA256) }
+                catch { throw New-Object System.Exception -ArgumentList ("Signing with SHA256 and Pkcs1 padding failed using private key $($privKey): $_", $_.Exception) }
+            }
+
         }
         "HS256" {
             if (-not ($PSBoundParameters.ContainsKey("Secret"))) {
@@ -305,7 +321,7 @@ https://jwt.io/
             $sig = $null
         }
         default {
-            throw 'The algorithm is not one of the supported: "RS256", "HS256", "none"'
+            throw 'The algorithm is not one of the supported: "ES256", "RS256", "HS256", "none"'
         }
 
     }
@@ -321,11 +337,11 @@ function Test-Jwt {
 Tests cryptographic integrity of a JWT (JSON Web Token).
 
 .DESCRIPTION
-Verifies a digital signature of a JWT given the signing certificate (for RS256) or the secret (for HS256).
+Verifies a digital signature of a JWT given the signing certificate (for RS256/ES256) or the secret (for HS256).
 
 .PARAMETER Cert
 Specifies the signing certificate of type System.Security.Cryptography.X509Certificates.X509Certificate2. 
-Must be specified if the algorithm in the header is RS256. Doesn't have to, and generally shouldn't, contain the private key.
+Must be specified if the algorithm in the header is RS256/ES256. Doesn't have to, and generally shouldn't, contain the private key.
 
 .PARAMETER Secret
 Specifies the HMAC secret. Can be byte array, or a string, which will be converted to bytes. 
@@ -347,7 +363,7 @@ VERBOSE: Using certificate with subject: CN=jwt_signing_test
 True
 
 .LINK
-https://github.com/SP3269/posh-jwt
+https://github.com/Webblitchy/posh-jwt
 .LINK
 https://jwt.io/
 
@@ -378,7 +394,19 @@ https://jwt.io/
             Write-Verbose "Using certificate with subject: $($Cert.Subject)"
             $SHA256 = New-Object Security.Cryptography.SHA256Managed
             $computed = $SHA256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($parts[0]+"."+$parts[1])) # Computing SHA-256 hash of the JWT parts 1 and 2 - header and payload
-            return $cert.PublicKey.Key.VerifyHash($computed,$bytes,[Security.Cryptography.HashAlgorithmName]::SHA256,[Security.Cryptography.RSASignaturePadding]::Pkcs1) # Returns True if the hash verifies successfully        
+            $publicKey =  [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPublicKey($Cert)
+            return $publicKey.VerifyHash($computed,$bytes,[Security.Cryptography.HashAlgorithmName]::SHA256,[Security.Cryptography.RSASignaturePadding]::Pkcs1) # Returns True if the hash verifies successfully        
+        }
+        "ES256" {
+            if (-not $PSBoundParameters.ContainsKey("Cert")) {
+                throw "ES256 requires -Cert parameter of type System.Security.Cryptography.X509Certificates.X509Certificate2"
+            }
+            $bytes = ConvertFrom-Base64URLString $parts[2] -AsByteArray
+            Write-Verbose "Using certificate with subject: $($Cert.Subject)"
+            $SHA256 = New-Object Security.Cryptography.SHA256Managed
+            $computed = $SHA256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($parts[0]+"."+$parts[1])) # Computing SHA-256 hash of the JWT parts 1 and 2 - header and payload
+            $publicKey = [System.Security.Cryptography.X509Certificates.ECDsaCertificateExtensions]::GetECDsaPublicKey($Cert)
+            return $publicKey.VerifyHash($computed,$bytes) # Returns True if the hash verifies successfully        
         }
         "HS256" {
             if (-not ($PSBoundParameters.ContainsKey("Secret"))) {
@@ -402,12 +430,9 @@ https://jwt.io/
             return -not $parts[2] # Must not have the signature part
         }
         default {
-            throw 'The algorithm is not one of the supported: "RS256", "HS256", "none"'
+            throw 'The algorithm is not one of the supported: "ES256", "RS256", "HS256", "none"'
         }
 
     }
 
 }
-
-
-Set-Alias -Name "Verify-JwtSignature" -Value "Test-Jwt" -Description "An alias, using non-standard verb"
