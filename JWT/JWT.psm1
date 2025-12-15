@@ -192,7 +192,7 @@ Specifies the claim to sign in JSON. Mandatory string.
 Specifies a JWT header. Optional. Defaults to '{"alg":"RS256","typ":"JWT"}'.
 
 .PARAMETER Cert
-Specifies the signing certificate of type System.Security.Cryptography.X509Certificates.X509Certificate2. Must be specified and contain the private key if the algorithm in the header is RS256/ES256/ES256.
+Specifies the signing certificate of type System.Security.Cryptography.X509Certificates.X509Certificate2. Must be specified and contain the private key if the algorithm in the header is RS256/ES256.
 
 .PARAMETER Secret
 Specifies the HMAC secret. Can be byte array, or a string, which will be converted to bytes. Must be specified if the algorithm in the header is HS256.
@@ -436,3 +436,4 @@ https://jwt.io/
     }
 
 }
+
