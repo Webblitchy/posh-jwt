@@ -10,11 +10,11 @@ Many modern APIs require crytographically signed JWT tokens. This module is to e
 
 The script module is published on PowerShell Gallery. Install with 
 ```powershell
-Install-Module JWT
+Install-Module POSH-JWT
 ``` 
 Alternatively, download the source and import the script module directly:
 ```powershell
-Import-Module /Path/to/JWT.psm1
+Import-Module /Path/to/POSH-JWT.psm1
 ``` 
 
 ## Usage
