@@ -1,4 +1,4 @@
-# POSH JWT
+# POSH-JWT
 
 *Updated fork supporting ES256 and fixing deprecated methods*
 
