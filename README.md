@@ -1,5 +1,7 @@
 # PowerShell JWT
 
+*Updated fork supporting ES256 and fixing deprecated methods*
+
 JWT (JSON Web Tokens) implementation in PowerShell per [RFC7519](https://tools.ietf.org/html/rfc7519)
 
 Many modern APIs require crytographically signed JWT tokens. This module is to enable creating and verifying those from PowerShell and the underlying .NET Framework, without using external libraries. 
