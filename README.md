@@ -19,7 +19,7 @@ Import-Module /Path/to/JWT.psm1
 
 The module provides two main functions: `New-Jwt`, `Test-Jwt`, as well as service functions - `ConvertFrom-Base64UrlString`, `ConvertFrom-Base64UrlString`, `Get-JwtHeader`, and `Get-JwtPayload`. Descriptions and help for each are available by running `Get-Help`.
 
-### Using **RS256** algorithm
+### Using **RS256** / **ES256** algorithms
 
 `New-Jwt` creates a JWT given a JSON payload containing a set of claims and a signing key, and `Test-Jwt` verifies the JWT using public key corresponding to the signing key. In this implementation, both keys are passed to the cmdlets as `-Cert` parameter of type [System.Security.Cryptography.X509Certificates.X509Certificate2](https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509certificate2). 
 
