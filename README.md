@@ -17,7 +17,7 @@ Import-Module /Path/to/JWT.psm1
 
 ## Usage
 
-The module provides two main functions: `New-Jwt`, `Test-Jwt` (also aliased to `Verify-JwtSignature`), as well as service functions - `ConvertFrom-Base64UrlString`, `ConvertFrom-Base64UrlString`, `Get-JwtHeader`, and `Get-JwtPayload`. Descriptions and help for each are available by running `Get-Help`.
+The module provides two main functions: `New-Jwt`, `Test-Jwt`, as well as service functions - `ConvertFrom-Base64UrlString`, `ConvertFrom-Base64UrlString`, `Get-JwtHeader`, and `Get-JwtPayload`. Descriptions and help for each are available by running `Get-Help`.
 
 ### Using **RS256** algorithm
 
@@ -25,11 +25,11 @@ The module provides two main functions: `New-Jwt`, `Test-Jwt` (also aliased to `
 
 There are several ways to create an instance of `X509Certificate2`. You can import PKCS #12/PFX file:
 ```powershell
-$Cert = Get-PfxCertificate /ps/jwt/jwt.pfx
+$Cert = Get-PfxCertificate /full/path/jwt.pfx
 ```
 Alternatively, you can instantiate this way, specifying the file and password:
 ```powershell
-$Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("/ps/jwt/jwt.pfx","jwt")
+$Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2("/full/path/jwt.pfx","password")
 ```
 Yet another option is using [Cert: drive](https://docs.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Security/About/about_Certificate_Provider), which can contain certificates with or without private keys, and is available in Windows by default:
 ```powershell
@@ -119,6 +119,7 @@ $cert.PrivateKey.CspKeyContainerInfo.ProviderName
 
 ## Change log
 
+- Version 2 - adds support for ES256 and fix deprecated Cryptography lib features
 - Version 1.9 - adds support for HS256 and NONE for RFC7519 compliance; additional service functions and error handling. 
 - Version 1.1.0 - modifies the code to be compatible with RSA as well as CNG in Windows and OpenSSL provider on Linux/Macintosh.
 - Version 1.0.0 - initial release.
